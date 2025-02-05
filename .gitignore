@@ -1,0 +1,8 @@
+*.env
+.venv/
+app/artifacts/
+data/
+.idea/
+*__pycache__/
+*/htmlcov/
+*.coverage

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kol Zchut Chatbot</title>
+    <link rel="icon" href="/webiks_logo.ico" type="image/x-icon">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function useEnterPress(callback) {
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    callback();
+                }
+            };
+            React.useEffect(() => {
+                document.addEventListener('keydown', handleKeyPress);
+                return () => {
+                    document.removeEventListener('keydown', handleKeyPress);
+                };
+            });
+        }
+
+        function MyApp() {
+            const [query, setQuery] = React.useState('');
+            const [currentQuestion, setCurrentQuestion] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+            const [results, setResults] = React.useState(null);
+            const [showIntro, setShowIntro] = React.useState(true)
+            const [currentConfig, setCurrentConfig] = React.useState({});
+            const [tempConfig, setTempConfig] = React.useState({});
+            const [isEqualConfigs, setIsEqualConfigs] = React.useState(true);
+            const responseRef = React.useRef(null);
+            const questionSeed = [
+                "המעסיק פיטר אותי לאחר שהודעתי לו שאני בהריון. הוא טוען שזה בגלל צמצומים, מותר לו?",
+                "האם אני זכאית לדמי אבטלה אם התפטרתי? ואם כן-ממתי?",
+                "האם מותר לשלם לעובדת משק בית במזומן?",
+                "מה הזכויות בעבודה במקרה של חופשת לידה?",
+                "מהן זכויות אסירים בישראל?",
+                "האם מתנדבת בשירות לאומי חייבת להיות בשיחה של הרכזת?"
+            ]
+            const models = ["gpt-3.5-turbo-0125", "gpt-4o-mini-2024-07-18", "gpt-4o-2024-08-06"]
+            const num_of_pages_options = Array.from({ length: 5 }, (_, i) => i + 1)
+            const temperatures = Array.from({ length: 9 }, (_, i) => (i + 1) / 10);
+
+
+            React.useEffect(() => {
+                const fetchConfig = async () => {
+                    const response = await fetch('/get_config');
+                    const data = await response.json();
+                    setCurrentConfig(data || {});
+                    setTempConfig(data || {});
+                };
+                fetchConfig();
+            }, []);
+
+            const setFieldInTempConfig = (key, value) => {
+                const newConfig = { ...tempConfig, [key]: value };
+                setTempConfig(newConfig);
+                setIsEqualConfigs(deepEqual(newConfig, currentConfig))
+            }
+
+            const deepEqual = (obj1, obj2, notToEqual = []) => {
+                if (obj1 === obj2) return true;
+
+                if (
+                    obj1 === null || obj2 === null ||
+                    typeof obj1 !== "object" || typeof obj2 !== "object"
+                ) return false;
+
+                obj1 = JSON.parse(JSON.stringify(obj1));
+                obj2 = JSON.parse(JSON.stringify(obj2));
+
+                notToEqual.forEach(field => {
+                    delete obj1[field];
+                    delete obj2[field];
+                });
+
+                const keys1 = Object.keys(obj1);
+                const keys2 = Object.keys(obj2);
+                if (keys1.length !== keys2.length) return false;
+
+                for (const key of keys1) {
+                    if (!keys2.includes(key)) return false;
+                    if (!deepEqual(obj1[key], obj2[key], notToEqual)) return false;
+                }
+
+                return true;
+            };
+
+            const onSearch = async (question = null) => {
+                if ((!query && question === null) || loading) return;
+                setLoading(true);
+                if (question === null) question = query
+                try {
+                    const asked_from = window.location.href;
+                    const response = await fetch('/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: question, asked_from })
+                    });
+                    setCurrentQuestion(question)
+                    const data = await response.json();
+                    setResults(data);
+                    setTimeout(() => {
+                        responseRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                } catch (error) {
+                    console.error("Error during search:", error);
+                } finally {
+                    setLoading(false);
+                    setShowIntro(false)
+                }
+            };
+
+            const onSaveConfig = async () => {
+                try {
+                    await fetch('/set_config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tempConfig)
+                    });
+                    setCurrentConfig(tempConfig);
+                    setIsEqualConfigs(true);
+                } catch (error) {
+                    console.error("Error saving config:", error);
+                }
+            };
+            const runQuestion = (question) => { if (!loading) { setQuery(question); onSearch(question); } }
+            useEnterPress(onSearch);
+
+            return (
+                <div id="wrapper">
+                    <aside>
+                        <img className={`webiks-logo ${!showIntro ? "hoverable" : ""}`}  src="webiks_logo.svg" alt="Webiks Logo" onClick={() => setShowIntro(true)}  />
+                        <div className="settings-header">
+                            <h2>הגדרות</h2>
+                            <a href="#" className="clear-form" onClick={() => { setTempConfig(currentConfig); setIsEqualConfigs(true) }}>ניקוי</a>
+                        </div>
+                        <label>בחירת מודל שפה
+                            <select value={tempConfig.model || ''} onChange={(e) => setFieldInTempConfig("model", e.target.value)}>
+                                {models.map((model, key) => {
+                                    return <option value={model} key={key}>{model}</option>
+                                })
+                                }
+                            </select>
+                        </label>
+                        <label>בחירת מס׳ דפים מאוחזרים עבור מודל השפה
+                            <select value={tempConfig.num_of_pages || ''} onChange={(e) => setFieldInTempConfig("num_of_pages", e.target.value)}>
+                                {
+                                    num_of_pages_options.map((opt, key) => {
+                                        return <option value={opt} key={key}>{opt}</option>
+                                    })
+                                }
+                            </select>
+                        </label>
+                        <label>טמפרטורה - מודל שפה
+                            <select type="number" step="0.1" value={tempConfig.temperature || ''} onChange={(e) => setFieldInTempConfig("temperature", e.target.value)}>
+                                {
+                                    temperatures.map((temp, key) => {
+                                        return <option value={temp} key={key}>{temp}</option>
+                                    })
+                                }
+                            </select>
+                        </label>
+                        <label>System Prompt
+                            <textarea className="textarea-prompt" value={tempConfig.system_prompt || ''} onChange={(e) => setFieldInTempConfig("system_prompt", e.target.value)} />
+                        </label>
+                        <label>User Prompt
+                            <textarea className="textarea-prompt" value={tempConfig.user_prompt || ''} onChange={(e) => setFieldInTempConfig("user_prompt", e.target.value)} />
+                        </label>
+                        <button className={`button-save ${isEqualConfigs ? "button-disable" : ""}`} disabled={isEqualConfigs} onClick={onSaveConfig}>שמירה</button>
+                    </aside>
+                    <div className="main-content">
+                        {!results || showIntro ? (
+                            <>
+                                <h1 className="h1-welcome">ברוכים הבאים לצ׳אטבוט של ווביקס!</h1>
+                                <textarea
+                                    className="textarea-query"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    placeholder="הקלידו שאלה לצ׳אבוט של ווביקס..."
+                                />
+
+                                <button
+                                    className={`button-query ${loading || query.trim() === '' ? "button-disable" : ""}`}
+                                    disabled={loading || query.trim() === ''}
+                                    onClick={() => onSearch()}
+                                >
+                                    {loading ? <div className="loader"></div> : "שאל/י את הצ׳אטבוט"}
+                                </button>
+                                <h1 className="h1-try">נסו את השאלות לדוגמה</h1>
+                                <div className="example-questions">
+                                    {questionSeed.map((question, index) => (
+                                        <div key={index} className="question-box">
+                                            <p className="question-text">{question}</p>
+                                            <hr />
+                                            <div className="question-footer" onClick={() => runQuestion(question)}>
+                                                <span>הרץ שאלה לדוגמה</span>
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M5 12l5 5L20 5" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+
+                            </>
+                        ) : (
+
+                            <div className="response-container" ref={responseRef}>
+                                <h1 className="question-header">{currentQuestion}</h1>
+                                <h3>תשובת הצ׳אטבוט</h3>
+                                <textarea className="textarea-answer" readOnly value={results.llm_result || ''} />
+
+                                <div className="response-grid">
+                                    <div>
+                                        <h3>תשובות מודל האחזור (דפים שאוחזרו)</h3>
+                                        <div className="links-div">
+                                            {results["metadata"] &&
+                                                results["docs"].map(({ id, title, link }, index) => (
+                                                    <p key={id}>
+                                                        {index + 1}. <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
+                                                    </p>
+                                                ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3>מהירות תשובה מודל האחזור</h3>
+                                        <div className="text-div-big answer-div">
+                                            {results.metadata?.retrieval_time?.toFixed(2) + "s" || ''}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3>מהירות תשובה מודל השפה</h3>
+                                        <div className="text-div-big answer-div">
+                                            {results.metadata?.llm_time?.toFixed(2) + "s" || ''}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h1 className="query-header">רוצה לשאול עוד שאלה?</h1>
+                                <textarea
+                                    className="textarea-query"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    placeholder="הקלידו שאלה לצ׳אבוט של ווביקס..."
+                                />
+
+                                <button
+                                    className={`button-query ${loading || query.trim() === '' ? "button-disable" : ""}`}
+                                    disabled={loading || query.trim() === ''}
+                                    onClick={() => onSearch()}
+                                >
+                                    {loading ? <div className="loader"></div> : "שאל/י את הצ׳אטבוט"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<MyApp />);
+    </script>
+</body>

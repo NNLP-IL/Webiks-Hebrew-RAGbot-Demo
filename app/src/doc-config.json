@@ -1,0 +1,12 @@
+{
+  "identifier_field": "doc_id",
+  "saved_fields": {
+    "title": "text",
+    "doc_id": "integer",
+    "link": "text",
+    "content": "text"
+  },
+  "field_for_llm": "content",
+  "model_name": "Webiks_KolZchut_QA_Embedder_v1.0",
+  "field_to_embed": "content"
+}
