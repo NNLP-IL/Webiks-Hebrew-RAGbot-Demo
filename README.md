@@ -6,7 +6,7 @@ This project is a FastAPI-based application that integrates with Elasticsearch a
 It includes endpoints for searching, updating, and rating documents, as well as handling configurations and updates.
 this projects integrates with [Webiks-Hebrew-RAGbot](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot) project.
 You need to have a retrival model. You can get it from [here](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view).
-You can train model by yourself. You can see the train code [here](https://github.com/NNLP-IL/Webiks-KolZchut-QA-Trainer).
+You can train model by yourself. You can see the train code [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-Trainer).
 
 ## Setup
 
@@ -41,6 +41,8 @@ You can train model by yourself. You can see the train code [here](https://githu
 6. Add the [retrival model](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view) to the new artifacts directory.
 7. Install the required packages: `pip install -r requirements.txt`
 8. Create a docker container for Elasticsearch using the command (change the %%path_to_project%% to your path).
+9. Add the paragraphs corpus to the base directory. You can find it [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-KolZchut-Paragraph-Corpus).
+10. Run the project and seed the db using the /initialize_elastic_from_json route.
 
 ```
 docker run -e "discovery.type=single-node" -e "xpack.security.enabled=false" -e "ES_JAVA_OPTS=-Xms2g -Xmx2g" -p 9200:9200 -v %%path_to_project%%/app/data/elastic/data:/usr/share/elasticsearch/data elasticsearch:8.12.2
