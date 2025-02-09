@@ -34,19 +34,20 @@ You can train model by yourself. You can see the train code [here](https://githu
 ## Installation
 
 1. Clone the repository.
-2. Ensure you have python 3.10 installed (and not a higher version).
-3. Create a virtual environment: `python -m venv .venv`
-4. Create a .env file in app/ directory.
-5. Create a new directory in app/ named "artifacts".
-6. Add the [retrival model](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view) to the new artifacts directory.
-7. Install the required packages: `pip install -r requirements.txt`
-8. Create a docker container for Elasticsearch using the command (change the %%path_to_project%% to your path).
-9. Add the paragraphs corpus to the base directory. You can find it [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-KolZchut-Paragraph-Corpus).
-10. Run the project and seed the db using the /initialize_elastic_from_json route.
-
+2. move to the project directory: `cd Webiks-Hebrew-RAGbot-Demo`
+3. Ensure you have python 3.10 installed (and not a higher version).
+4. Create a virtual environment: `python -m venv .venv`
+5. move to the virtual environment: `.venv\Scripts\activate`
+6. Create a .env file in app/ directory.
+7. Create a new directory in app/ named "artifacts".
+8. Add the [retrival model](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view) to the new artifacts directory.
+9. Install the required packages: `pip install -r requirements.txt`
+10. Create a docker container for Elasticsearch using the command (change the %%path_to_project%% to your path).
 ```
 docker run -e "discovery.type=single-node" -e "xpack.security.enabled=false" -e "ES_JAVA_OPTS=-Xms2g -Xmx2g" -p 9200:9200 -v %%path_to_project%%/app/data/elastic/data:/usr/share/elasticsearch/data elasticsearch:8.12.2
 ```
+11. Add the paragraphs corpus to the base directory. You can find it [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-KolZchut-Paragraph-Corpus).
+12. Run the project and seed the db using the /initialize_elastic_from_json route.
 
 ## Running
 
@@ -94,7 +95,7 @@ Initializing the data from the corpus to the elastic. Recommended to execute bef
 
 `POST /operate_docs`
 **Body:** `{
-  "operation": str("create" or "delete" only),
+  "operation": str("create" or "update" only),
   "documents": [
     { "doc_id": number, "title": "string", "link": "string", "content": "string" }
   ]
