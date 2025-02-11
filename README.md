@@ -48,6 +48,7 @@ docker run -e "discovery.type=single-node" -e "xpack.security.enabled=false" -e 
 ```
 11. Add the paragraphs corpus to the base directory. You can find it [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-KolZchut-Paragraph-Corpus).
 12. Run the project and seed the db using the /initialize_elastic_from_json route.
+    note: the seeding process takes time ao the first answers will be not accurate. We recommend you to use GPU.
 
 ## Running
 
