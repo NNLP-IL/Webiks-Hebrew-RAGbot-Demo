@@ -5,7 +5,7 @@
 This project is a FastAPI-based application that integrates with Elasticsearch and a rag-bot to perform various document-related operations.
 It includes endpoints for searching, updating, and rating documents, as well as handling configurations and updates.
 this projects integrates with [Webiks-Hebrew-RAGbot](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot) project.
-You need to have a retrival model. You can get it from [here](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view).
+You need to have a retrival model. You can get it from [here](https://drive.google.com/file/d/1i_7bTdGWC7yUVC_NLDQGk63kPRhZT7y3/view).
 You can train model by yourself. You can see the train code [here](https://github.com/NNLP-IL/Webiks-Hebrew-RAGbot-Trainer).
 
 ## Setup
@@ -40,7 +40,7 @@ You can train model by yourself. You can see the train code [here](https://githu
 5. move to the virtual environment: `.venv\Scripts\activate`
 6. Create a .env file in app/ directory.
 7. Create a new directory in app/ named "artifacts".
-8. Add the [retrival model](https://drive.google.com/file/d/1eFAddJWBWDvoid-Gyn6ZT5jPwf-vNPI8/view) to the new artifacts directory.
+8. Add the [retrival model](https://drive.google.com/file/d/1i_7bTdGWC7yUVC_NLDQGk63kPRhZT7y3/view) to the new artifacts directory.
 9. Install the required packages: `pip install -r requirements.txt`
 10. Create a docker container for Elasticsearch using the command (change the %%path_to_project%% to your path).
 ```
